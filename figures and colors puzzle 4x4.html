@@ -1,0 +1,345 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Фигуры и цвета</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: лист в клетку. Слева поле 4×4, справа панель выбора фигур и цветов; на телефоне всё в одну колонку. */
+:root {
+  --paper: #f7f8fb;
+  --grid-line: #cfdcf0;
+  --margin: #f0a9a0;
+  --ink: #2a2733;
+  --ink-soft: #6b6878;
+  --board-line: #3a3548;
+  --cell-given: #e9edf6;
+  --accent: #3b5bdb;
+  --bad: #d6336c;
+  --good: #2b8a3e;
+  --p-blue: #3f8fd9;
+  --p-red: #e8574a;
+  --p-black: #2a2733;
+  --p-brown: #a8692f;
+  --font-display: "Caveat", "Segoe Print", cursive;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #1c1d26; --grid-line: #2c3040; --margin: #6b3a3a; --ink: #ecebf2; --ink-soft: #9a98aa;
+    --board-line: #b9b6cc; --cell-given: #2a2d3c; --accent: #8fa6ff; --bad: #ff6b9a; --good: #69db7c;
+    --p-blue: #5eaaf0; --p-red: #ff7a6b; --p-black: #e6e4f0; --p-brown: #d49456;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #1c1d26; --grid-line: #2c3040; --margin: #6b3a3a; --ink: #ecebf2; --ink-soft: #9a98aa;
+  --board-line: #b9b6cc; --cell-given: #2a2d3c; --accent: #8fa6ff; --bad: #ff6b9a; --good: #69db7c;
+  --p-blue: #5eaaf0; --p-red: #ff7a6b; --p-black: #e6e4f0; --p-brown: #d49456;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 20px 40px;
+  min-height: 100%;
+}
+.wrap { max-width: 860px; margin-inline: auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+h1 { font-family: var(--font-display); font-size: 2.6rem; line-height: 1; margin: 0; font-weight: 700; text-wrap: balance; }
+.rules { margin: 0; max-width: 62ch; color: var(--ink-soft); }
+.rules b { color: var(--ink); font-weight: 600; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--paper); border: 1.5px solid var(--board-line); padding: 10px 12px; }
+.group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.group > .lbl { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); margin-right: 2px; }
+button { font: inherit; color: var(--ink); background: var(--paper); border: 1.5px solid var(--board-line); padding: 6px 11px; cursor: pointer; border-radius: 3px; }
+button:hover { background: var(--cell-given); }
+button:focus-visible, .cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+.main { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.board-col { flex: 1 1 340px; min-width: 0; max-width: 460px; display: flex; flex-direction: column; gap: 12px; }
+.board {
+  display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; aspect-ratio: 1;
+  border: 3px solid var(--board-line); background: var(--paper);
+}
+.cell {
+  position: relative; border: 1.5px solid var(--board-line); background: var(--paper);
+  display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 0; min-width: 0;
+}
+.cell.given { background: var(--cell-given); }
+.cell.sel { box-shadow: inset 0 0 0 4px var(--accent); }
+.cell.bad { background: color-mix(in srgb, var(--bad) 16%, var(--paper)); }
+.cell.bad.given { background: color-mix(in srgb, var(--bad) 16%, var(--cell-given)); }
+.cell svg { width: 78%; height: 78%; overflow: visible; }
+.cell .dot { width: 30%; aspect-ratio: 1; border-radius: 50%; }
+.cell .tag { position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--ink-soft); }
+.shape { fill: none; stroke-width: 6; stroke-linejoin: round; stroke-linecap: round; }
+.c0 { --pc: var(--p-blue); } .c1 { --pc: var(--p-red); } .c2 { --pc: var(--p-black); } .c3 { --pc: var(--p-brown); } .cn { --pc: var(--ink-soft); }
+.shape { stroke: var(--pc); }
+.cn .shape { stroke-dasharray: 2 11; }
+.sw { background: var(--pc); }
+
+.status { min-height: 3.2em; font-size: 14px; color: var(--ink-soft); margin: 0; }
+.status.win { color: var(--good); font-family: var(--font-display); font-size: 1.7rem; line-height: 1.1; font-weight: 700; }
+.info { font-size: 13px; color: var(--ink-soft); margin: 0; max-width: 56ch; }
+
+.side { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 14px; max-width: 360px; }
+.panel { background: var(--paper); border: 1.5px solid var(--board-line); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.panel h2 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+.pal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pal button { aspect-ratio: 1; padding: 6px; display: flex; align-items: center; justify-content: center; position: relative; }
+.pal button svg { width: 100%; height: 100%; }
+.pal button .k { position: absolute; left: 4px; bottom: 1px; font-size: 10px; color: var(--ink-soft); }
+.pal .swatch { width: 62%; aspect-ratio: 1; border-radius: 50%; background: var(--pc); }
+.pal button.cur { box-shadow: inset 0 0 0 3px var(--accent); }
+.pal .shape { stroke: var(--ink); }
+.hint-keys { font-size: 12px; color: var(--ink-soft); margin: 0; }
+@media (max-width: 520px) { h1 { font-size: 2.2rem; } .side { max-width: none; } }
+@media (prefers-reduced-motion: no-preference) { .cell, button { transition: background .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Фигуры и цвета</h1>
+  </header>
+  <p class="rules">Заполни поле 4×4: в каждой клетке стоит фигура определённого цвета. В одной строке и в одном столбце <b>фигуры не повторяются</b> и <b>цвета не повторяются</b>. В режиме «16 пар» ещё и <b>каждое сочетание фигуры и цвета</b> встречается только один раз.</p>
+
+  <div class="bar">
+    <div class="group" role="group" aria-label="Правила">
+      <span class="lbl">Правила</span>
+      <button id="mLatin" aria-pressed="true">Строки и столбцы</button>
+      <button id="mGreco" aria-pressed="false">16 пар</button>
+    </div>
+    <div class="group" role="group" aria-label="Сложность" id="diffGroup">
+      <span class="lbl">Сложность</span>
+      <button data-d="easy" aria-pressed="false">Легко</button>
+      <button data-d="mid" aria-pressed="true">Средне</button>
+      <button data-d="hard" aria-pressed="false">Трудно</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="board-col">
+      <div class="board" id="board" role="grid" aria-label="Игровое поле"></div>
+      <p class="status" id="status" aria-live="polite"></p>
+      <p class="info" id="info"></p>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <h2>Фигура</h2>
+        <div class="pal" id="palS"></div>
+        <h2>Цвет</h2>
+        <div class="pal" id="palC"></div>
+        <button id="bClear">Очистить клетку</button>
+        <p class="hint-keys">Клавиши: стрелки двигают выбор, 1–4 ставят фигуру, Q W E R ставят цвет, Backspace очищает.</p>
+      </div>
+      <div class="group">
+        <button id="bHint">Подсказка</button>
+        <button id="bReset">Начать заново</button>
+        <button id="bNew">Новая задача</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="solver">
+// Фигуры: 0 квадрат, 1 ромб, 2 треугольник, 3 круг. Цвета: 0 синий, 1 красный, 2 чёрный, 3 коричневый.
+// Нумерация совпадает со списком на листе: фигуры 1–4, цвета 1–4.
+function shuffled(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+// grid: массив из 16 пар [s, c], -1 = неизвестно. mode: 'latin' | 'greco'. Возвращает до limit решений.
+function solve(grid, mode, limit, randomize) {
+  const out = [], cur = new Array(16);
+  const rS = [0,0,0,0], cS = [0,0,0,0], rC = [0,0,0,0], cC = [0,0,0,0];
+  let pairs = 0;
+  const base = [0,1,2,3];
+  function rec(i) {
+    if (out.length >= limit) return;
+    if (i === 16) { out.push(cur.map(p => p.slice())); return; }
+    const r = (i / 4) | 0, c = i % 4;
+    const [gs, gc] = grid[i];
+    const sl = gs >= 0 ? [gs] : (randomize ? shuffled(base) : base);
+    const cl = gc >= 0 ? [gc] : (randomize ? shuffled(base) : base);
+    for (const s of sl) {
+      if ((rS[r] >> s & 1) || (cS[c] >> s & 1)) continue;
+      for (const k of cl) {
+        if ((rC[r] >> k & 1) || (cC[c] >> k & 1)) continue;
+        const pb = 1 << (s * 4 + k);
+        if (mode === 'greco' && (pairs & pb)) continue;
+        rS[r] |= 1 << s; cS[c] |= 1 << s; rC[r] |= 1 << k; cC[c] |= 1 << k; pairs |= pb;
+        cur[i] = [s, k];
+        rec(i + 1);
+        rS[r] &= ~(1 << s); cS[c] &= ~(1 << s); rC[r] &= ~(1 << k); cC[c] &= ~(1 << k); pairs &= ~pb;
+        if (out.length >= limit) return;
+      }
+    }
+  }
+  rec(0);
+  return out;
+}
+function makePuzzle(mode, level) {
+  const full = solve(Array.from({length: 16}, () => [-1, -1]), mode, 1, true)[0];
+  const g = full.map(p => p.slice());
+  const target = level === 'easy' ? 14 : level === 'mid' ? 20 : 99;
+  let removed = 0;
+  for (const slot of shuffled([...Array(32).keys()])) {
+    if (removed >= target) break;
+    const i = slot >> 1, j = slot & 1, keep = g[i][j];
+    g[i][j] = -1;
+    if (solve(g, mode, 2).length === 1) removed++; else g[i][j] = keep;
+  }
+  return g;
+}
+</script>
+
+<script>
+const SHAPE_NAMES = ['квадрат', 'ромб', 'треугольник', 'круг'];
+const COLOR_NAMES = ['синий', 'красный', 'чёрный', 'коричневый'];
+const SHAPE_SVG = [
+  '<polygon class="shape" points="22,24 78,21 80,77 20,79"/>',
+  '<polygon class="shape" points="50,15 83,50 49,85 17,51"/>',
+  '<polygon class="shape" points="50,17 83,78 17,81"/>',
+  '<ellipse class="shape" cx="50" cy="50" rx="31" ry="28" transform="rotate(-12 50 50)"/>'
+];
+const svgOf = i => '<svg viewBox="0 0 100 100" aria-hidden="true">' + SHAPE_SVG[i] + '</svg>';
+const KEYS_C = { q: 0, w: 1, e: 2, r: 3 };
+
+const st = { mode: 'latin', level: 'mid', given: null, user: null, sel: 0, won: false, note: '' };
+const $ = id => document.getElementById(id);
+
+function resetUser() { st.user = Array.from({length: 16}, () => [-1, -1]); st.won = false; st.note = ''; }
+const val = (i, j) => st.given[i][j] >= 0 ? st.given[i][j] : st.user[i][j];
+const cellVal = i => [val(i, 0), val(i, 1)];
+
+function conflicts() {
+  const bad = new Set();
+  for (let a = 0; a < 16; a++) for (let b = a + 1; b < 16; b++) {
+    const sameLine = ((a / 4) | 0) === ((b / 4) | 0) || a % 4 === b % 4;
+    const [sa, ca] = cellVal(a), [sb, cb] = cellVal(b);
+    if (sameLine && ((sa >= 0 && sa === sb) || (ca >= 0 && ca === cb))) { bad.add(a); bad.add(b); }
+    if (st.mode === 'greco' && sa >= 0 && ca >= 0 && sa === sb && ca === cb) { bad.add(a); bad.add(b); }
+  }
+  return bad;
+}
+
+function cellHTML(i) {
+  const [s, c] = cellVal(i);
+  if (s < 0 && c < 0) return '';
+  if (s < 0) return '<div class="dot sw c' + c + '"></div>';
+  return '<span class="c' + (c >= 0 ? c : 'n') + '" style="display:contents">' + svgOf(s) + '</span>';
+}
+
+function render() {
+  const bad = conflicts();
+  const board = $('board');
+  board.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const b = document.createElement('button');
+    b.className = 'cell' + (st.given[i][0] >= 0 || st.given[i][1] >= 0 ? ' given' : '') + (i === st.sel ? ' sel' : '') + (bad.has(i) ? ' bad' : '');
+    const [s, c] = cellVal(i);
+    b.setAttribute('aria-label', 'Строка ' + (((i / 4) | 0) + 1) + ', столбец ' + (i % 4 + 1) + ': ' + (s >= 0 || c >= 0 ? (c >= 0 ? COLOR_NAMES[c] : '') + ' ' + (s >= 0 ? SHAPE_NAMES[s] : '') : 'пусто'));
+    b.innerHTML = cellHTML(i);
+    b.onclick = () => { st.sel = i; render(); };
+    board.appendChild(b);
+  }
+  // палитра
+  const [cs, cc] = cellVal(st.sel);
+  $('palS').innerHTML = ''; $('palC').innerHTML = '';
+  for (let s = 0; s < 4; s++) {
+    const b = document.createElement('button');
+    b.title = SHAPE_NAMES[s]; b.setAttribute('aria-label', SHAPE_NAMES[s]);
+    b.className = cs === s ? 'cur' : '';
+    b.innerHTML = svgOf(s) + '<span class="k">' + (s + 1) + '</span>';
+    b.onclick = () => setSlot(0, s);
+    $('palS').appendChild(b);
+  }
+  for (let k = 0; k < 4; k++) {
+    const b = document.createElement('button');
+    b.title = COLOR_NAMES[k]; b.setAttribute('aria-label', COLOR_NAMES[k]);
+    b.className = (cc === k ? 'cur ' : '') + 'c' + k;
+    b.innerHTML = '<span class="swatch"></span><span class="k">' + 'QWER'[k] + '</span>';
+    b.onclick = () => setSlot(1, k);
+    $('palC').appendChild(b);
+  }
+  // статус
+  let filled = 0;
+  for (let i = 0; i < 16; i++) { const [s, c] = cellVal(i); if (s >= 0 && c >= 0) filled++; }
+  const done = filled === 16 && bad.size === 0;
+  st.won = done;
+  const status = $('status');
+  status.className = 'status' + (done ? ' win' : '');
+  if (done) status.textContent = 'Готово! Все правила выполнены.';
+  else status.textContent = st.note || ('Заполнено клеток: ' + filled + ' из 16' + (bad.size ? '. Подсвечены клетки с повтором.' : '.'));
+  // кнопки
+  $('mLatin').setAttribute('aria-pressed', st.mode === 'latin');
+  $('mGreco').setAttribute('aria-pressed', st.mode === 'greco');
+  document.querySelectorAll('#diffGroup button').forEach(b => b.setAttribute('aria-pressed', b.dataset.d === st.level));
+}
+
+function setSlot(j, v) {
+  if (st.given[st.sel][j] >= 0) { st.note = 'Эта клетка задана условием.'; render(); st.note = ''; return; }
+  st.user[st.sel][j] = st.user[st.sel][j] === v ? -1 : v;
+  st.note = '';
+  render();
+}
+
+function describe() {
+  $('info').textContent = 'У этой задачи ровно одно решение.';
+}
+
+function newPuzzle() {
+  st.given = makePuzzle(st.mode, st.level);
+  resetUser(); st.sel = 0; describe(); render();
+}
+
+function hint() {
+  let sol = solve(st.given.map((g, i) => [val(i, 0), val(i, 1)]), st.mode, 1)[0];
+  let fromGivens = false;
+  if (!sol) { sol = solve(st.given, st.mode, 1)[0]; fromGivens = true; }
+  if (!sol) { st.note = 'Решения нет, подсказывать нечего.'; render(); return; }
+  const order = [st.sel, ...[...Array(16).keys()].filter(i => i !== st.sel)];
+  for (const i of order) for (let j = 0; j < 2; j++) {
+    if (st.given[i][j] < 0 && st.user[i][j] !== sol[i][j]) {
+      st.user[i][j] = sol[i][j]; st.sel = i;
+      st.note = fromGivens ? 'В твоих значениях была ошибка, исправил одну.' : 'Поставил одно значение.';
+      render(); return;
+    }
+  }
+}
+
+$('mLatin').onclick = () => { st.mode = 'latin'; newPuzzle(); };
+$('mGreco').onclick = () => { st.mode = 'greco'; newPuzzle(); };
+document.querySelectorAll('#diffGroup button').forEach(b => b.onclick = () => { st.level = b.dataset.d; newPuzzle(); });
+$('bNew').onclick = newPuzzle;
+$('bReset').onclick = () => { resetUser(); render(); };
+$('bHint').onclick = hint;
+$('bClear').onclick = () => { for (let j = 0; j < 2; j++) if (st.given[st.sel][j] < 0) st.user[st.sel][j] = -1; st.note = ''; render(); };
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  const r = (st.sel / 4) | 0, c = st.sel % 4;
+  let moved = true;
+  if (k === 'ArrowUp') st.sel = ((r + 3) % 4) * 4 + c;
+  else if (k === 'ArrowDown') st.sel = ((r + 1) % 4) * 4 + c;
+  else if (k === 'ArrowLeft') st.sel = r * 4 + (c + 3) % 4;
+  else if (k === 'ArrowRight') st.sel = r * 4 + (c + 1) % 4;
+  else moved = false;
+  if (moved) { e.preventDefault(); render(); const cells = $('board').children; if (cells[st.sel]) cells[st.sel].focus(); return; }
+  if (k >= '1' && k <= '4') { setSlot(0, +k - 1); const cells = $('board').children; cells[st.sel] && cells[st.sel].focus(); }
+  else if (k.toLowerCase() in KEYS_C && /^[a-z]$/i.test(k)) { setSlot(1, KEYS_C[k.toLowerCase()]); }
+  else if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); $('bClear').click(); }
+});
+
+newPuzzle();
+</script>
+
+</body></html>
